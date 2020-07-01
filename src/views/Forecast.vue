@@ -1,9 +1,10 @@
 <template>
   <v-main>
     <v-col lg=4 md=6 offset-md=3 offset-lg=4>
+      <!-- Current day weather card -->
       <v-row class="mb-1 pa-2">
-        <v-card height="50vh" width="100%" class="rounded-lg">
-          <v-col class="pa-0 pb-4 justify-center" style="height: 100%;" v-if="forecast.length > 0">
+        <v-card height="50vh" width="100%" class="rounded-lg pb-4">
+          <v-col class="pa-0" style="height: 100%;" v-if="forecast.length > 0">
             <v-row style="height: 50%;" align="center">
               <v-col cols=6>
                 <v-row justify="center">{{ forecast[activeDay].dt | date }}</v-row>
@@ -31,6 +32,7 @@
           <v-progress-circular v-else indeterminate />
         </v-card>
       </v-row>
+      <!-- Row of daily weather cards -->
       <v-row>
         <v-item-group style="width: 100%;" v-model="activeDay">
           <v-row>
@@ -44,6 +46,7 @@
           </v-row>
         </v-item-group>
       </v-row>
+      <!-- Temperature unit selector -->
       <v-row class="pa-2">
         <v-switch v-model="temperatureUnit" true-value="Fahrenheit" false-value="Celsius" hint="Temperature unit" persistent-hint :label="temperatureUnit"/>
       </v-row>
@@ -72,10 +75,10 @@ export default {
       var activeDayTemp = this.forecast[this.activeDay].temp
       var formattedTempData = [{
         data: [
-          { x: 'morning', y: this.formatTemperature(activeDayTemp['morn']) },
-          { x: 'midday', y: this.formatTemperature(activeDayTemp['day']) },
-          { x: 'evening', y: this.formatTemperature(activeDayTemp['eve']) },
-          { x: 'night', y: this.formatTemperature(activeDayTemp['night']) }
+          { x: 'morning', y: this.formatTemperature(activeDayTemp.morn) },
+          { x: 'midday', y: this.formatTemperature(activeDayTemp.day) },
+          { x: 'evening', y: this.formatTemperature(activeDayTemp.eve) },
+          { x: 'night', y: this.formatTemperature(activeDayTemp.night) }
         ]
       }]
       return formattedTempData
@@ -85,7 +88,6 @@ export default {
     getForecastData () {
       var url = 'https://api.openweathermap.org/data/2.5/onecall'
       var key = process.env.VUE_APP_OPENWEATHERMAP_APIKEY
-      console.log(key)
       var params = {
         lat: '42.281378',
         lon: '-83.747261',
@@ -100,10 +102,10 @@ export default {
     parseForecastData (data) {
       this.forecast = data.daily.slice(0, 5)
     },
-    formatTemperature(value) {
+    formatTemperature (value) {
       // Takes a kelvin value and converts to either Celsius or Fahrenheit depending on unit selection
       value -= 273.15
-      if (this.temperatureUnit == 'Fahrenheit') {
+      if (this.temperatureUnit === 'Fahrenheit') {
         value = (value * 1.8) + 32
       }
       return value.toFixed(1) + '°'

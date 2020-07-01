@@ -3,6 +3,7 @@
 </template>
 <script>
 import VueApexCharts from 'vue-apexcharts'
+
 export default {
   components: {
     VueApexCharts
@@ -26,7 +27,7 @@ export default {
             show: false
           },
           y: {
-            formatter: (value) => { return value += '°' },
+            formatter: (value) => { return value + '°' },
             title: {
               formatter: () => {}
             }
