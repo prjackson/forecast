@@ -1,10 +1,19 @@
 <template>
   <v-main>
-    <v-col lg=4 md=6 offset-md=3 offset-lg=4>
+    <v-snackbar timeout=2000 v-model="showError" color="red lighten-3 black--text">Error: you must enter valid coordinates</v-snackbar>
+    <v-col lg=4 md=6 offset-md=3 offset-lg=4 class="pt-6">
       <!-- Current day weather card -->
-      <v-row class="mb-1 pa-2">
+      <v-row class="mb-3">
+        <v-text-field label="Location Coordinates" v-model="location" @keydown.enter="getForecastData()" solo single-line hide-details>
+          <template v-slot:append>
+            <v-progress-circular v-if="loading" indeterminate />
+            <v-icon v-else @click="getForecastData()">mdi-magnify</v-icon>
+          </template>
+        </v-text-field>
+      </v-row>
+      <v-row class="mb-1">
         <v-card height="50vh" width="100%" class="rounded-lg pb-4">
-          <v-col class="pa-0" style="height: 100%;" v-if="forecast.length > 0">
+          <v-col style="height: 100%;" v-if="forecast.length > 0">
             <v-row style="height: 50%;" align="center">
               <v-col cols=6>
                 <v-row justify="center">{{ forecast[activeDay].dt | date }}</v-row>
@@ -29,11 +38,10 @@
               <TemperatureChart :series="tempOverTime"/>
             </v-row>
           </v-col>
-          <v-progress-circular v-else indeterminate />
         </v-card>
       </v-row>
       <!-- Row of daily weather cards -->
-      <v-row>
+      <v-row class="px-1">
         <v-item-group style="width: 100%;" v-model="activeDay">
           <v-row>
             <v-col class="pa-2" v-for="day in forecast" :key="day.dt">
@@ -67,7 +75,10 @@ export default {
     return {
       forecast: [],
       activeDay: 0,
-      temperatureUnit: 'Fahrenheit'
+      temperatureUnit: 'Fahrenheit',
+      location: '42.281378, -83.747261',
+      loading: false,
+      showError: false
     }
   },
   computed: {
@@ -85,19 +96,31 @@ export default {
     }
   },
   methods: {
+    validCoordinates: val => /^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/.test(val),
     getForecastData () {
+      this.loading = true
+
+      if (!this.validCoordinates(this.location)) {
+        console.log('bruh')
+        this.showError = true
+        this.loading = false
+        return
+      }
+
       var url = 'https://api.openweathermap.org/data/2.5/onecall'
       var key = process.env.VUE_APP_OPENWEATHERMAP_APIKEY
       var params = {
-        lat: '42.281378',
-        lon: '-83.747261',
+        lat: this.location.split(',')[0],
+        lon: this.location.split(',')[1].trim(),
         exclude: 'current,minutely,hourly',
         appid: key
       }
 
-      axios.get(url, { params: params }).then(response => {
-        this.parseForecastData(response.data)
-      }).catch(error => console.log(error))
+      axios.get(url, { params: params })
+        .then(response => { this.parseForecastData(response.data) })
+        .catch(error => console.log(error))
+        .then(() => { this.loading = false })
+
     },
     parseForecastData (data) {
       this.forecast = data.daily.slice(0, 5)
